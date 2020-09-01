@@ -5,11 +5,14 @@ from fabric.contrib import files
 USER = 'user9'
 SERVER = 'devserver'
 GITHUB = 'https://github.com/r2d2-lex/graphql-example.git'
-PROJECT_NAME = 'graphql-example'
+PROJECT_DIR_NAME = 'graphql-example'
+PROJECT_APP_NAME = 'gqlshop'
 
 env.hosts = [USER+'@'+SERVER]
-PROJECT_PATH = '/home/{user_name}/{project_name}'.format(user_name=USER, project_name=PROJECT_NAME)
-
+PROJECT_PATH = '/home/{user_name}/{project_name}'.format(user_name=USER, project_name=PROJECT_DIR_NAME)
+NGINX_BACKUP_SITES = '/etc/nginx/sites-enabled/{appname}.conf.bak'.format(appname=PROJECT_APP_NAME)
+NGINX_DEFAULT_SITE_PATH = '/etc/nginx/sites-enabled/default'
+NGINX_APP_NAME = '/etc/nginx/sites-enabled/{appname}.conf'.format(appname=PROJECT_APP_NAME)
 
 def hello():
     local('hello')
@@ -32,7 +35,7 @@ def install_packages():
 
 def create_venv():
     if not files.exists(PROJECT_PATH+'/venv'):
-        with cd(PROJECT_NAME):
+        with cd(PROJECT_DIR_NAME):
             run('python3 -m venv venv')
 
 
@@ -40,36 +43,50 @@ def install_project_code():
     if not files.exists(PROJECT_PATH):
         run('git clone '+GITHUB)
     else:
-        with cd(PROJECT_NAME):
+        with cd(PROJECT_DIR_NAME):
             run('git pull')
 
 
 def install_project_requirements():
-    with cd(PROJECT_NAME):
+    with cd(PROJECT_DIR_NAME):
         run('{project_path}/venv/bin/pip install -r requirements.txt --upgrade'.format(project_path=PROJECT_PATH))
 
 
 def configure_uwsgi():
     sudo('python3 -m pip install uwsgi')
     sudo('mkdir -p /etc/uwsgi/sites')
-    files.upload_template('templates/uwsgi.ini', '/etc/uwsgi/sites/gqlshop.ini', use_sudo=True)
+    files.upload_template(
+        'templates/uwsgi.ini',
+        '/etc/uwsgi/sites/{appname}.ini'.format(appname=PROJECT_APP_NAME),
+        use_sudo=True
+    )
     files.upload_template('templates/uwsgi.service', '/etc/systemd/system/uwsgi.service', use_sudo=True)
 
 
 def configure_nginx():
-    if files.exists('/etc/nginx/sites-enabled/default'):
-        sudo('rm /etc/nginx/sites-enabled/default')
-    files.upload_template('templates/nginx.conf', '/etc/nginx/sites-enabled/gqlshop.conf', use_sudo=True)
+    if files.exists(NGINX_DEFAULT_SITE_PATH):
+        sudo(NGINX_DEFAULT_SITE_PATH)
+    files.upload_template(
+        'templates/nginx.conf',
+        NGINX_APP_NAME,
+        use_sudo=True,
+    )
+    # Удаляет backup файл из директории nginx, чтобы не было ошибки конфигурации
+    if files.exists(NGINX_BACKUP_SITES):
+        sudo('rm '+NGINX_BACKUP_SITES)
 
 
 def migrate_database():
-    pass
+    with cd(PROJECT_DIR_NAME):
+        run(PROJECT_PATH+'/venv/bin/python manage.py makemigrations')
+        run(PROJECT_PATH+'/venv/bin/python manage.py migrate')
 
 
 def restart_all():
     sudo('systemctl daemon-reload')
     sudo('systemctl reload nginx')
     # systemctl -u uwsgi.service
+    # journalctl -u uwsgi.service
     sudo('systemctl restart uwsgi')
 
 
