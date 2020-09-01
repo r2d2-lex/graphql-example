@@ -1,0 +1,9 @@
+.idea
+venv/
+venv
+gqlshop/db.sqlite3
+gqlshop/__pycache__
+gqlshop/gqlshop/__pycache__
+gqlshop/catalog/__pycache__
+gqlshop/catalog/migrations
+__pycache__/
