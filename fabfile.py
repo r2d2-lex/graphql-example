@@ -44,7 +44,7 @@ def install_project_code():
             run('git pull')
 
 
-def install_project_reqirements():
+def install_project_requirements():
     with cd(PROJECT_NAME):
         run('{project_path}/venv/bin/pip install -r requirements.txt --upgrade'.format(project_path=PROJECT_PATH))
 
@@ -57,7 +57,7 @@ def configure_uwsgi():
 
 
 def configure_nginx():
-    pass
+    files.upload_template('templates/nginx.conf', '/etc/nginx/sites-enabled/gqlshop.conf', use_sudo=True)
 
 
 def migrate_database():
@@ -65,14 +65,17 @@ def migrate_database():
 
 
 def restart_all():
-    pass
+    sudo('systemctl daemon-reload')
+    sudo('systemctl reload nginx')
+    # systemctl -u uwsgi.service
+    sudo('systemctl restart uwsgi')
 
 
 def bootstrap():
     install_packages()
     install_project_code()
     create_venv()
-    install_project_reqirements()
+    install_project_requirements()
     configure_uwsgi()
     configure_nginx()
     migrate_database()
