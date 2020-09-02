@@ -10,9 +10,11 @@ PROJECT_APP_NAME = 'gqlshop'
 
 env.hosts = [USER+'@'+SERVER]
 PROJECT_PATH = '/home/{user_name}/{project_name}'.format(user_name=USER, project_name=PROJECT_DIR_NAME)
-NGINX_BACKUP_SITES = '/etc/nginx/sites-enabled/{appname}.conf.bak'.format(appname=PROJECT_APP_NAME)
+NGINX_BACKUP_SITES = '/etc/nginx/sites-enabled/{app_name}.conf.bak'.format(app_name=PROJECT_APP_NAME)
 NGINX_DEFAULT_SITE_PATH = '/etc/nginx/sites-enabled/default'
-NGINX_APP_NAME = '/etc/nginx/sites-enabled/{appname}.conf'.format(appname=PROJECT_APP_NAME)
+NGINX_APP_NAME = '/etc/nginx/sites-enabled/{app_name}.conf'.format(app_name=PROJECT_APP_NAME)
+MANAGE_PY_PATH = '{project_dir_name}/{app_name}'.format(project_dir_name=PROJECT_DIR_NAME, app_name=PROJECT_APP_NAME)
+
 
 def hello():
     local('hello')
@@ -57,7 +59,7 @@ def configure_uwsgi():
     sudo('mkdir -p /etc/uwsgi/sites')
     files.upload_template(
         'templates/uwsgi.ini',
-        '/etc/uwsgi/sites/{appname}.ini'.format(appname=PROJECT_APP_NAME),
+        '/etc/uwsgi/sites/{app_name}.ini'.format(app_name=PROJECT_APP_NAME),
         use_sudo=True
     )
     files.upload_template('templates/uwsgi.service', '/etc/systemd/system/uwsgi.service', use_sudo=True)
@@ -77,15 +79,18 @@ def configure_nginx():
 
 
 def migrate_database():
-    with cd(PROJECT_DIR_NAME):
+    with cd(MANAGE_PY_PATH):
         run(PROJECT_PATH+'/venv/bin/python manage.py makemigrations')
         run(PROJECT_PATH+'/venv/bin/python manage.py migrate')
 
 
+def create_super_user():
+    with cd(MANAGE_PY_PATH):
+        run(PROJECT_PATH+'/venv/bin/python manage.py createsuperuser')
+
 def restart_all():
     sudo('systemctl daemon-reload')
     sudo('systemctl reload nginx')
-    # systemctl -u uwsgi.service
     # journalctl -u uwsgi.service
     sudo('systemctl restart uwsgi')
 
