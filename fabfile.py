@@ -88,11 +88,17 @@ def create_super_user():
     with cd(MANAGE_PY_PATH):
         run(PROJECT_PATH+'/venv/bin/python manage.py createsuperuser')
 
+
 def restart_all():
     sudo('systemctl daemon-reload')
     sudo('systemctl reload nginx')
     # journalctl -u uwsgi.service
     sudo('systemctl restart uwsgi')
+
+
+def make_static():
+    with cd(MANAGE_PY_PATH):
+        run(PROJECT_PATH+'/venv/bin/python manage.py collectstatic')
 
 
 def bootstrap():
@@ -104,3 +110,4 @@ def bootstrap():
     configure_nginx()
     migrate_database()
     restart_all()
+    make_static()

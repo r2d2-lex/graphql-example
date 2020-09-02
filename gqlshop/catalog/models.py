@@ -1,6 +1,17 @@
 from django.db import models
 
 
+class City(models.Model):
+    name = models.CharField(max_length=100)
+
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=100)
+    city = models.ForeignKey(
+        "City", related_name='suppliers', on_delete=models.CASCADE,
+    )
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
 
@@ -18,6 +29,7 @@ class Product(models.Model):
     category = models.ForeignKey(
         Category, related_name='products', on_delete=models.CASCADE,
     )
+    suppliers = models.ManyToManyField("Supplier")
 
     def __str__(self):
         return self.name
