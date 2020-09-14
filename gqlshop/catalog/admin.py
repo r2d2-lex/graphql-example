@@ -1,20 +1,37 @@
 from django.contrib import admin
-
+from django.db.models import Prefetch
 from .models import Category, City, Product, Supplier
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = 'id', 'name', 'price', 'category', 'get_suppliers_str'
+    list_display = (
+        'id',
+        'name',
+        'price',
+        'supplier',
+        'city',
+        'get_categories_str',
+    )
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.prefetch_related()
+
+        # prefetch_qs = Category.objects.only('name')
+        # prefetch = Prefetch(
+        #     'categories',
+        #     queryset=prefetch_qs
+        # )
+        # qs = qs.prefetch_related(prefetch)
         return qs
 
-    def get_suppliers_str(self, obj):
-        return ', '.join(obj.suppliers.all().values_list('name', flat=True))
+    @staticmethod
+    def city(obj):
+        return obj.supplier.city
 
-    get_suppliers_str.short_description = 'Suppliers'
+    def get_categories_str(self, obj):
+        return ', '.join([c.name for c in obj.categories.all()])
+
+    get_categories_str.short_description = 'categories'
 
 
 admin.site.register(Category)

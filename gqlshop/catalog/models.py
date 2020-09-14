@@ -7,14 +7,18 @@ class City(models.Model):
     def __str__(self):
         return self.name
 
+
 class Supplier(models.Model):
     name = models.CharField(max_length=100)
     city = models.ForeignKey(
-        "City", related_name='suppliers', on_delete=models.CASCADE,
+        "City",
+        related_name='suppliers',
+        on_delete=models.CASCADE,
     )
 
     def __str__(self):
         return self.name
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -30,10 +34,12 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
-    category = models.ForeignKey(
-        Category, related_name='products', on_delete=models.CASCADE,
+    supplier = models.ForeignKey(
+        Supplier,
+        related_name='products',
+        on_delete=models.CASCADE,
     )
-    suppliers = models.ManyToManyField("Supplier")
+    categories = models.ManyToManyField(Category)
 
     def __str__(self):
         return self.name

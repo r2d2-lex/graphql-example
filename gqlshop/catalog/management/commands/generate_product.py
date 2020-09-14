@@ -8,17 +8,17 @@ class Command(BaseCommand):
 
     def generate(self, amount=95):
         fake = Faker()
-        categories = Category.objects.values_list('id', flat=True)
-        suppliers = list(Supplier.objects.values_list('id', flat=True))
+        categories = list(Category.objects.values_list('id', flat=True))
+        suppliers = Supplier.objects.values_list('id', flat=True)
         for i in range(amount):
             product = Product.objects.create(
                 name=fake.name(),
                 price=random.random()*1000,
                 description=fake.text(),
-                category_id=random.choice(categories),
+                supplier_id=random.choice(suppliers),
             )
-            product.suppliers.add(
-                *random.sample(suppliers, random.randint(1, len(suppliers)))
+            product.categories.add(
+                *random.sample(categories, random.randint(1, len(categories)))
             )
 
     def handle(self, *args, **kwargs):
