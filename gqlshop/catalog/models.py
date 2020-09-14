@@ -1,4 +1,7 @@
 from django.db import models
+from django.utils.timezone import now
+from django.utils.functional import cached_property
+import datetime
 
 
 class City(models.Model):
@@ -24,7 +27,7 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
 
     class Meta:
-        verbose_name_plural = "Categories"
+        verbose_name_plural = 'Categories'
 
     def __str__(self):
         return self.name
@@ -36,7 +39,7 @@ class Product(models.Model):
     description = models.TextField()
     supplier = models.ForeignKey(
         Supplier,
-        related_name='products',
+        related_name='supplier',
         on_delete=models.CASCADE,
     )
     categories = models.ManyToManyField(Category)
@@ -44,3 +47,37 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @cached_property
+    def get_orders_all(self):
+        orders = []
+        for order in self.orders.all():
+            if now() - order.created > datetime.timedelta(minutes=15):
+                orders.append(order)
+        return orders
+
+
+class OrderProducts(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', on_delete=models.CASCADE)
+    quantity = models.PositiveSmallIntegerField(default=1)
+    description = models.TextField(default='')
+
+    def __str__(self):
+        return '{} Product {} in order {}'.format(
+            self.quantity,
+            self.product_id,
+            self.order_id,
+        )
+
+
+class Order(models.Model):
+        user_email = models.EmailField()
+        products = models.ManyToManyField(
+            Product,
+            through=OrderProducts,
+            related_name='orders'
+        )
+        created = models.DateTimeField(auto_now_add=True)
+
+        def __str__(self):
+            return 'Order {} from {}'.format(self.id, self.user_email)
