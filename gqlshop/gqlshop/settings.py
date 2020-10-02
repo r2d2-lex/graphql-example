@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
+    'django_rq',
     'catalog.apps.CatalogConfig',
     'debug_toolbar',
 ]
@@ -129,3 +130,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, "static"),
 # ]
+
+RQ_QUEUES = {
+    'default': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'DB': 0
+    }
+}

@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('graphql', GraphQLView.as_view(graphiql=True, schema=schema)),
     path('catalog/', include('catalog.urls')),
+    path('django-rq', include('django_rq.urls')),
     path('', include('catalog.urls')),
 ]
 

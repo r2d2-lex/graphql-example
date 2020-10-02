@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import Prefetch, Sum
-from .models import Category, City, Product, Supplier
-
+from .models import Category, City, CurrencyRate, Product, Supplier
+import requests
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
@@ -40,7 +40,23 @@ class ProductAdmin(admin.ModelAdmin):
     get_categories_str.short_description = 'Categories'
 
 
+class CurrencyRateAdmin(admin.ModelAdmin):
+
+    actions = ['update_currency_rates',]
+
+    def update_currency_rates(self, request, queryset):
+        for rate in queryset:
+            pair = '{}RUB'.format(rate.currency.upper())
+            response = requests.get(
+                'https://www.freeforexapi.com/api/live?pairs={}'.format(pair)
+            )
+            data = response.json()
+            rate.rate = data['rates'][pair]['rate']
+            rate.save(update_fields=['rate'])
+
+
 admin.site.register(Category)
 admin.site.register(City)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Supplier)
+admin.site.register(CurrencyRate, CurrencyRateAdmin)

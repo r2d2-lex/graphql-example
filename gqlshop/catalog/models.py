@@ -81,3 +81,25 @@ class Order(models.Model):
 
         def __str__(self):
             return 'Order {} from {}'.format(self.id, self.user_email)
+
+
+class CurrencyRate(models.Model):
+    CURRENCIES = (
+        ('usd', 'usd'),
+        ('eur', 'eur'),
+    )
+    currency = models.CharField(max_length=3, choices=CURRENCIES)
+    rate = models.DecimalField(max_digits=10, decimal_places=6, default=1)
+
+    def __str__(self):
+        return '{} ({})'.format(self.currency, self.rate)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            try:
+                rate = CurrencyRate.objects.get(currency=self.currency)
+                self.pk = rate.pk
+            except CurrencyRate.DoesNotExist:
+                print('Не существует...')
+                pass
+        super().save(*args, **kwargs)
