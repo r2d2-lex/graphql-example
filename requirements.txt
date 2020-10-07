@@ -9,3 +9,5 @@ redis==3.5.3
 requests==2.24.0
 rq-scheduler==0.10.0
 django-rq==2.3.2
+coverage==5.3
+mock==4.0.2

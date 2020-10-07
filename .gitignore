@@ -5,5 +5,6 @@ gqlshop/__pycache__
 gqlshop/gqlshop/__pycache__
 gqlshop/catalog/__pycache__
 gqlshop/catalog/migrations
+gqlshop/.coverage
 __pycache__/
 gqlshop/db.sqlite3
